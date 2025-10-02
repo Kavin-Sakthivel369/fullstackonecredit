@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "server:dev",
+      "type": "npm",
+      "script": "dev",
+      "path": "server",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "server:seed",
+      "type": "npm",
+      "script": "prisma:seed",
+      "path": "server",
+      "problemMatcher": []
+    },
+    {
+      "label": "web:dev",
+      "type": "npm",
+      "script": "dev",
+      "path": "web",
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}

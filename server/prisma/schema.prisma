@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Roles in the system
+enum Role {
+  OWNER
+  WORKER
+  BROKER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  fullName  String
+  role      Role
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  jobs          Job[]        @relation("OwnerJobs")
+  applications  Application[]
+  brokerages    Brokerage[]  @relation("BrokerToBrokerage")
+  messages      Message[]
+}
+
+model Job {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  location    String
+  category    String // electrician, plumber, carpenter, etc.
+  budget      Int?
+  status      String      @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  ownerId String
+  owner   User        @relation("OwnerJobs", fields: [ownerId], references: [id])
+  applications Application[]
+  brokerage    Brokerage?
+  messages     Message[]
+}
+
+model Application {
+  id        String   @id @default(cuid())
+  coverNote String?
+  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, WITHDRAWN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobId  String
+  job    Job      @relation(fields: [jobId], references: [id])
+
+  workerId String
+  worker   User     @relation(fields: [workerId], references: [id])
+}
+
+model Brokerage {
+  id        String   @id @default(cuid())
+  feePct    Int      @default(10)
+  status    String   @default("ASSIGNED") // ASSIGNED, ACTIVE, COMPLETED, CANCELLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobId String @unique
+  job   Job    @relation(fields: [jobId], references: [id])
+
+  brokerId String
+  broker   User   @relation("BrokerToBrokerage", fields: [brokerId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id])
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id])
+}
