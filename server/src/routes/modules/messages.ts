@@ -6,13 +6,24 @@ import { z } from 'zod';
 const router = Router();
 
 router.get('/', requireAuth, async (req, res) => {
+  const jobId = req.query.jobId as string | undefined;
+
+  let where: any = {
+    OR: [
+      { senderId: req.user!.id },
+      { job: { ownerId: req.user!.id } },
+      { job: { brokerage: { brokerId: req.user!.id } } },
+    ],
+  };
+
+  if (jobId) {
+    where = { AND: [where, { jobId }] };
+  }
+
   const items = await prisma.message.findMany({
-    where: {
-      OR: [
-        { senderId: req.user!.id },
-        { job: { ownerId: req.user!.id } },
-        { job: { brokerage: { brokerId: req.user!.id } } },
-      ],
+    where,
+    include: {
+      sender: { select: { id: true, fullName: true } },
     },
     orderBy: { createdAt: 'asc' },
   });

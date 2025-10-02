@@ -6,16 +6,34 @@ import { z } from 'zod';
 const router = Router();
 
 router.get('/', requireAuth, async (req, res) => {
-  if (req.user!.role === 'WORKER') {
-    const items = await prisma.application.findMany({ where: { workerId: req.user!.id } });
-    return res.json({ items });
+  const jobId = req.query.jobId as string | undefined;
+
+  let where: any = {};
+
+  if (jobId) {
+    where.jobId = jobId;
+    if (req.user!.role === 'WORKER') {
+      where.workerId = req.user!.id;
+    } else if (req.user!.role === 'OWNER') {
+      where.job = { ownerId: req.user!.id };
+    }
+  } else {
+    if (req.user!.role === 'WORKER') {
+      where.workerId = req.user!.id;
+    } else if (req.user!.role === 'OWNER') {
+      where.job = { ownerId: req.user!.id };
+    } else {
+      where.job = { brokerage: { brokerId: req.user!.id } };
+    }
   }
-  if (req.user!.role === 'OWNER') {
-    const items = await prisma.application.findMany({ where: { job: { ownerId: req.user!.id } } });
-    return res.json({ items });
-  }
-  // broker sees all applications for jobs they manage
-  const items = await prisma.application.findMany({ where: { job: { brokerage: { brokerId: req.user!.id } } } });
+
+  const items = await prisma.application.findMany({
+    where,
+    include: {
+      worker: { select: { id: true, fullName: true, email: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
   return res.json({ items });
 });
 
