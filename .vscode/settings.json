@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "files.eol": "\n",
+  "eslint.workingDirectories": [
+    { "directory": "web", "changeProcessCWD": true },
+    { "directory": "server", "changeProcessCWD": true }
+  ],
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
+}
