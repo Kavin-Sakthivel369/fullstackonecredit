@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  approved     Boolean  @default(false)
+
+  worker Worker?
+  owner  Owner?
+  projectsOwned Project[] @relation("OwnerProjects")
+  projectsAssigned Project[] @relation("AssignedProjects")
+}
+
+model Worker {
+  id         Int    @id @default(autoincrement())
+  userId     Int    @unique
+  user       User   @relation(fields: [userId], references: [id])
+  skill      String
+  experience String?
+  phone      String?
+  address    String?
+}
+
+model Owner {
+  id          Int    @id @default(autoincrement())
+  userId      Int    @unique
+  user        User   @relation(fields: [userId], references: [id])
+  projectName String?
+  location    String?
+  description String?
+}
+
+model Project {
+  id               Int    @id @default(autoincrement())
+  ownerId          Int
+  owner            User   @relation("OwnerProjects", fields: [ownerId], references: [id])
+  title            String
+  description      String?
+  requiredSkill    String
+  assignedWorkerId Int?
+  assignedWorker   User?  @relation("AssignedProjects", fields: [assignedWorkerId], references: [id])
+  status           String @default("open")
+  lastApplicantId  Int?
+}
+
+enum Role {
+  owner
+  worker
+  admin
+}
